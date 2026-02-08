@@ -1,4 +1,4 @@
-# 🚀 Aidra Backend - TypeScript + Swagger
+# 🚀 Aidra Backend
 
 Complete backend API for Aidra donation platform built with TypeScript, Express, MongoDB, and Swagger documentation.
 
