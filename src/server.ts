@@ -6,7 +6,8 @@ import app from './app';
 connectDB();
 
 const PORT = process.env.PORT || 5000;
-const BASE_URL = process.env.NODE_ENV === 'production' 
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+const BASE_URL = isProduction
   ? 'https://aidra-backend-u8qq.onrender.com'
   : `http://localhost:${PORT}`;
 

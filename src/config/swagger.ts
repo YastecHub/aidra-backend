@@ -14,10 +14,10 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: process.env.NODE_ENV === 'production' 
+        url: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
           ? 'https://aidra-backend-u8qq.onrender.com'
           : 'http://localhost:5000',
-        description: process.env.NODE_ENV === 'production' 
+        description: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
           ? 'Production server'
           : 'Development server'
       }
