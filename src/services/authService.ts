@@ -33,7 +33,7 @@ export const register = async (email: string, password: string, fullName: string
     throw new Error('Failed to send verification email. Please try again later.');
   }
 
-  return { message: 'Registration successful. Check your email for OTP.' };
+  return { message: 'Registration successful. Check your email inbox or spam for OTP.' };
 };
 
 export const verifyEmail = async (email: string, otp: string) => {

@@ -8,7 +8,6 @@ import * as emailUtils from '../utils/email';
 
 let mongoServer: MongoMemoryServer;
 
-// Mock email sending
 jest.mock('../utils/email', () => ({
   sendOTPEmail: jest.fn().mockResolvedValue(undefined)
 }));
