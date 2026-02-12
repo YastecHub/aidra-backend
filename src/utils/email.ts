@@ -1,23 +1,27 @@
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 import logger from '../config/logger';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const sendOTPEmail = async (email: string, otp: string, type: string): Promise<void> => {
   const subject = type === 'emailVerification' ? 'Verify Your Email' : 'Reset Your Password';
-  const message = `Your OTP is: ${otp}. Valid for 10 minutes.`;
+  const html = `<strong>Your OTP is: ${otp}</strong><p>Valid for 10 minutes.</p>`;
 
   logger.info(`Attempting to send ${type} email to: ${email}`);
   
   try {
-    await sgMail.send({
+    const { data, error } = await resend.emails.send({
       from: process.env.FROM_EMAIL!,
-      to: email,
+      to: [email],
       subject,
-      text: message
+      html
     });
     
-    logger.info(`Email sent successfully to ${email} via SendGrid`);
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    logger.info(`Email sent successfully to ${email} via Resend`);
   } catch (error) {
     logger.error(`Email sending failed for ${email}:`, {
       error: (error as Error).message,
