@@ -6,7 +6,8 @@ export const createCampaignValidator = [
   body('goalAmount').isFloat({ min: 1 }).withMessage('Goal amount must be greater than 0'),
   body('image').isURL().withMessage('Image must be a valid URL'),
   body('category').optional().trim(),
-  body('endDate').optional().isISO8601().withMessage('End date must be a valid date')
+  body('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
+  body('walletAddress').optional().trim().notEmpty().withMessage('Wallet address cannot be empty')
 ];
 
 export const updateCampaignValidator = [
@@ -14,7 +15,8 @@ export const updateCampaignValidator = [
   body('title').optional().trim().notEmpty().withMessage('Title cannot be empty'),
   body('description').optional().trim().notEmpty().withMessage('Description cannot be empty'),
   body('goalAmount').optional().isFloat({ min: 1 }).withMessage('Goal amount must be greater than 0'),
-  body('image').optional().isURL().withMessage('Image must be a valid URL')
+  body('image').optional().isURL().withMessage('Image must be a valid URL'),
+  body('walletAddress').optional().trim().notEmpty().withMessage('Wallet address cannot be empty')
 ];
 
 export const campaignIdValidator = [

@@ -6,7 +6,7 @@ import { generateOTP } from '../utils/otp';
 import { sendOTPEmail } from '../utils/email';
 import logger from '../config/logger';
 
-export const register = async (email: string, password: string, fullName: string, role: string = 'donor') => {
+export const register = async (email: string, password: string, fullName: string, role: string = 'campaignOwner') => {
   logger.info(`Registration attempt for email: ${email}`);
   
   const existingUser = await User.findOne({ email });

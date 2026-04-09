@@ -33,7 +33,7 @@ const router = Router();
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [donor, campaignOwner]
+ *                 enum: [campaignOwner]
  *     responses:
  *       201:
  *         description: User registered successfully

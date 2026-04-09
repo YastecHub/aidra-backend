@@ -41,6 +41,9 @@ const router = Router();
  *               endDate:
  *                 type: string
  *                 format: date
+ *               walletAddress:
+ *                 type: string
+ *                 description: Campaign owner's crypto wallet for payouts
  *     responses:
  *       201:
  *         description: Campaign created successfully
@@ -133,6 +136,8 @@ router.get('/:id', campaignValidator.campaignIdValidator, validate, campaignCont
  *               goalAmount:
  *                 type: number
  *               image:
+ *                 type: string
+ *               walletAddress:
  *                 type: string
  *     responses:
  *       200:

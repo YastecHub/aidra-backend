@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import campaignRoutes from './routes/campaignRoutes';
 import donationRoutes from './routes/donationRoutes';
+import paymentRoutes from './routes/paymentRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));

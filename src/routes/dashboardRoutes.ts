@@ -29,7 +29,7 @@ const router = Router();
  *                       type: number
  *                     pendingPayments:
  *                       type: number
- *                     totalDonors:
+ *                     totalDonations:
  *                       type: number
  *                 activeCampaigns:
  *                   type: array

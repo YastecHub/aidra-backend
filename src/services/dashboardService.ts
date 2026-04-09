@@ -11,11 +11,10 @@ export const getDashboardStats = async (userId: string) => {
 
   const donations = await Donation.find({ campaign: { $in: campaignIds } });
   const pendingPayments = donations.filter(d => d.status === 'pending').reduce((sum, d) => sum + d.amount, 0);
-  const totalDonors = new Set(donations.map(d => d.donor.toString())).size;
+  const totalDonations = donations.filter(d => d.status === 'completed').length;
 
   const activeCampaignsList = campaigns.filter(c => c.status === 'active').slice(0, 2);
   const recentDonations = await Donation.find({ campaign: { $in: campaignIds } })
-    .populate('donor', 'fullName')
     .populate('campaign', 'title')
     .sort('-createdAt')
     .limit(5);
@@ -27,7 +26,7 @@ export const getDashboardStats = async (userId: string) => {
   if (underReview.length) notifications.push({ type: 'review', message: 'A campaign is under review' });
 
   return {
-    stats: { totalRaised, activeCampaigns, pendingPayments, totalDonors },
+    stats: { totalRaised, activeCampaigns, pendingPayments, totalDonations },
     activeCampaigns: activeCampaignsList,
     recentDonations,
     notifications

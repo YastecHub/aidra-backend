@@ -7,7 +7,7 @@ export interface IUser {
   password: string;
   fullName: string;
   profileImage?: string;
-  role: 'donor' | 'campaignOwner' | 'admin';
+  role: 'campaignOwner' | 'admin';
   isVerified: boolean;
   isKYCCompleted: boolean;
   kycStatus: 'pending' | 'approved' | 'rejected';
@@ -37,18 +37,28 @@ export interface ICampaign {
   status: 'draft' | 'active' | 'underReview' | 'completed' | 'rejected';
   category?: string;
   endDate?: Date;
+  walletAddress?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface IDonation {
   _id: string;
-  donor: Types.ObjectId;
+  donor?: Types.ObjectId;
+  donorEmail?: string;
   campaign: Types.ObjectId;
   amount: number;
-  paymentMethod: 'card' | 'crypto' | 'bank';
-  transactionId?: string;
+  cryptoAmount?: number;
+  cryptoCurrency?: string;
+  paymentMethod: 'crypto';
+  nowPaymentId?: string;
+  payAddress?: string;
+  txHash?: string;
+  paymentStatus: 'waiting' | 'confirming' | 'confirmed' | 'sending' | 'partially_paid' | 'finished' | 'failed' | 'refunded' | 'expired';
   status: 'pending' | 'completed' | 'failed';
+  ipnData?: Record<string, any>;
+  platformFee?: number;
+  netAmount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

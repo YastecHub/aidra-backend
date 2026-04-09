@@ -8,7 +8,7 @@ const userSchema = new Schema<IUserDocument>({
   password: { type: String, required: true, select: false },
   fullName: { type: String, required: true },
   profileImage: { type: String, default: null },
-  role: { type: String, enum: ['donor', 'campaignOwner', 'admin'], default: 'donor' },
+  role: { type: String, enum: ['campaignOwner', 'admin'], default: 'campaignOwner' },
   isVerified: { type: Boolean, default: false },
   isKYCCompleted: { type: Boolean, default: false },
   kycStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },

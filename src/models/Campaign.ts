@@ -12,7 +12,8 @@ const campaignSchema = new Schema<ICampaignDocument>({
   owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['draft', 'active', 'underReview', 'completed', 'rejected'], default: 'draft' },
   category: { type: String },
-  endDate: { type: Date }
+  endDate: { type: Date },
+  walletAddress: { type: String, default: null }
 }, { timestamps: true });
 
 export default mongoose.model<ICampaignDocument>('Campaign', campaignSchema);

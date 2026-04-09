@@ -1,11 +1,10 @@
 import { body, param } from 'express-validator';
 
 export const createDonationValidator = [
-  body('campaign').isMongoId().withMessage('Invalid campaign ID'),
-  body('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
-  body('paymentMethod').isIn(['card', 'crypto', 'bank']).withMessage('Invalid payment method'),
-  body('transactionId').optional().trim(),
-  body('status').optional().isIn(['pending', 'completed', 'failed']).withMessage('Invalid status')
+  body('campaignId').isMongoId().withMessage('Invalid campaign ID'),
+  body('amount').isFloat({ min: 1 }).withMessage('Amount must be at least $1'),
+  body('payCurrency').trim().notEmpty().withMessage('Crypto currency is required'),
+  body('donorEmail').optional().isEmail().withMessage('Invalid email format')
 ];
 
 export const campaignIdValidator = [

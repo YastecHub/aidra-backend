@@ -10,10 +10,8 @@ const router = Router();
  * @swagger
  * /api/donations:
  *   post:
- *     summary: Create a donation
+ *     summary: Create a donation (public, no auth required)
  *     tags: [Donations]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -21,41 +19,45 @@ const router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - campaign
+ *               - campaignId
  *               - amount
- *               - paymentMethod
+ *               - payCurrency
  *             properties:
- *               campaign:
+ *               campaignId:
  *                 type: string
  *               amount:
  *                 type: number
- *               paymentMethod:
+ *                 minimum: 1
+ *               payCurrency:
  *                 type: string
- *                 enum: [card, crypto, bank]
- *               transactionId:
+ *                 description: Crypto currency to pay with (e.g. btc, eth, usdt)
+ *               donorEmail:
  *                 type: string
- *               status:
- *                 type: string
- *                 enum: [pending, completed, failed]
+ *                 format: email
  *     responses:
  *       201:
- *         description: Donation created
+ *         description: Payment created, returns pay address and amount
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 donationId:
+ *                   type: string
+ *                 nowPaymentId:
+ *                   type: number
+ *                 payAddress:
+ *                   type: string
+ *                 payAmount:
+ *                   type: number
+ *                 payCurrency:
+ *                   type: string
+ *                 expiresAt:
+ *                   type: string
+ *       400:
+ *         description: Validation error or campaign not active
  */
-router.post('/', authenticate, donationValidator.createDonationValidator, validate, donationController.createDonation);
-
-/**
- * @swagger
- * /api/donations/my-donations:
- *   get:
- *     summary: Get user's donation history
- *     tags: [Donations]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of user's donations
- */
-router.get('/my-donations', authenticate, donationController.getMyDonations);
+router.post('/', donationValidator.createDonationValidator, validate, donationController.createDonation);
 
 /**
  * @swagger
