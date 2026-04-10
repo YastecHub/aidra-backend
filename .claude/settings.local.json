@@ -4,7 +4,19 @@
       "Bash(grep -E \"\\\\.\\(ts|js|json\\)$\")",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:5000/api/payments/currencies)",
+      "Bash(curl -s https://api-sandbox.nowpayments.io/v1/status)",
+      "Bash(curl -s -H \"x-api-key: VJQFYJ3-JWW4K59-K8HQR2P-HY7CRVD\" https://api-sandbox.nowpayments.io/v1/currencies)",
+      "Bash(curl -s -H \"x-api-key: VJQFYJ3-JWW4K59-K8HQR2P-HY7CRVD\" https://api.nowpayments.io/v1/currencies)",
+      "Bash(python3 -m json.tool)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(curl -s \"http://localhost:5000/api/payments/estimate?amount=100&currencyFrom=usd&currencyTo=btc\")",
+      "Bash(curl -s http://localhost:5000/api/campaigns)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test-campaign@example.com\",\"password\":\"test123456\",\"fullName\":\"Test User\"}')",
+      "Bash(curl -s \"http://localhost:5000/api/payments/status/69d830a6d3cecc9b0b3191ac\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>console.log\\(JSON.stringify\\(JSON.parse\\(d\\),null,2\\)\\)\\)\")"
     ]
   }
 }

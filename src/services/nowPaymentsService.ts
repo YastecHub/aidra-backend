@@ -1,16 +1,29 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import crypto from 'crypto';
 import logger from '../config/logger';
 
-const API_BASE = 'https://api.nowpayments.io/v1';
+const SANDBOX_BASE = 'https://api-sandbox.nowpayments.io/v1';
+const PRODUCTION_BASE = 'https://api.nowpayments.io/v1';
 
-const apiClient = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-    'x-api-key': process.env.NOWPAYMENTS_API_KEY || ''
+let apiClient: AxiosInstance;
+
+const getClient = (): AxiosInstance => {
+  if (!apiClient) {
+    const isSandbox = process.env.NOWPAYMENTS_SANDBOX === 'true';
+    const baseURL = isSandbox ? SANDBOX_BASE : PRODUCTION_BASE;
+
+    apiClient = axios.create({
+      baseURL,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.NOWPAYMENTS_API_KEY || ''
+      }
+    });
+
+    logger.info(`NOWPayments client initialized (${isSandbox ? 'sandbox' : 'production'})`);
   }
-});
+  return apiClient;
+};
 
 interface CreatePaymentParams {
   price_amount: number;
@@ -50,7 +63,7 @@ interface PaymentStatusResponse {
 
 export const createPayment = async (params: CreatePaymentParams): Promise<CreatePaymentResponse> => {
   try {
-    const response = await apiClient.post<CreatePaymentResponse>('/payment', params);
+    const response = await getClient().post<CreatePaymentResponse>('/payment', params);
     logger.info(`NOWPayments payment created: ${response.data.payment_id}`);
     return response.data;
   } catch (error: any) {
@@ -61,7 +74,7 @@ export const createPayment = async (params: CreatePaymentParams): Promise<Create
 
 export const getPaymentStatus = async (paymentId: string): Promise<PaymentStatusResponse> => {
   try {
-    const response = await apiClient.get<PaymentStatusResponse>(`/payment/${paymentId}`);
+    const response = await getClient().get<PaymentStatusResponse>(`/payment/${paymentId}`);
     return response.data;
   } catch (error: any) {
     logger.error('NOWPayments getPaymentStatus error:', error.response?.data || error.message);
@@ -94,7 +107,7 @@ export const verifyIPNSignature = (body: Record<string, any>, signature: string)
 
 export const getAvailableCurrencies = async (): Promise<string[]> => {
   try {
-    const response = await apiClient.get<{ currencies: string[] }>('/currencies');
+    const response = await getClient().get<{ currencies: string[] }>('/currencies');
     return response.data.currencies;
   } catch (error: any) {
     logger.error('NOWPayments getCurrencies error:', error.response?.data || error.message);
@@ -108,7 +121,7 @@ export const getEstimatedPrice = async (
   currencyTo: string
 ): Promise<{ estimated_amount: number }> => {
   try {
-    const response = await apiClient.get('/estimate', {
+    const response = await getClient().get('/estimate', {
       params: { amount, currency_from: currencyFrom, currency_to: currencyTo }
     });
     return response.data;
