@@ -12,6 +12,7 @@ export const sendOTPEmail = async (email: string, otp: string, type: string): Pr
   try {
     const { data, error } = await resend.emails.send({
       from: process.env.FROM_EMAIL!,
+      replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL!,
       to: [email],
       subject,
       html
