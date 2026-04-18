@@ -1,6 +1,30 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../types';
 import * as adminService from '../services/adminService';
+
+// ── Admin Registration (secret-protected) ──
+
+export const registerAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const providedSecret = req.headers['x-admin-secret'] as string;
+    const expectedSecret = process.env.ADMIN_BOOTSTRAP_SECRET;
+
+    if (!expectedSecret) {
+      res.status(500).json({ error: 'Admin registration is disabled (secret not configured)' });
+      return;
+    }
+    if (providedSecret !== expectedSecret) {
+      res.status(403).json({ error: 'Invalid admin secret' });
+      return;
+    }
+
+    const { email, password, fullName } = req.body;
+    const result = await adminService.registerAdmin(email, password, fullName);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+  }
+};
 
 // ── KYC ──
 

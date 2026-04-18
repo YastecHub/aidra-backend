@@ -61,6 +61,63 @@ router.post('/', donationValidator.createDonationValidator, validate, donationCo
 
 /**
  * @swagger
+ * /api/donations/checkout:
+ *   post:
+ *     summary: Create a hosted-checkout donation (returns an invoice URL for in-app payment)
+ *     description: Creates a NOWPayments hosted invoice. Frontend opens `invoiceUrl` in a modal/popup/iframe so users pay without leaving the app. `payCurrency` is optional — if omitted, the checkout page lets the user pick. `successUrl`/`cancelUrl` are where NOWPayments redirects after the flow.
+ *     tags: [Donations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - campaignId
+ *               - amount
+ *             properties:
+ *               campaignId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *                 minimum: 1
+ *               donorEmail:
+ *                 type: string
+ *                 format: email
+ *               payCurrency:
+ *                 type: string
+ *                 description: Optional preferred crypto (e.g. usdttrc20). If omitted, user picks on the hosted page.
+ *               successUrl:
+ *                 type: string
+ *                 description: URL NOWPayments redirects to after successful payment
+ *               cancelUrl:
+ *                 type: string
+ *                 description: URL NOWPayments redirects to if payment is cancelled
+ *     responses:
+ *       201:
+ *         description: Invoice created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 donationId:
+ *                   type: string
+ *                 invoiceId:
+ *                   type: string
+ *                 invoiceUrl:
+ *                   type: string
+ *                 amount:
+ *                   type: number
+ *                 currency:
+ *                   type: string
+ *       400:
+ *         description: Validation error or campaign not active
+ */
+router.post('/checkout', donationValidator.createCheckoutValidator, validate, donationController.createDonationCheckout);
+
+/**
+ * @swagger
  * /api/donations/campaign/{id}:
  *   get:
  *     summary: Get donations for a campaign (owner only)

@@ -115,6 +115,43 @@ export const getAvailableCurrencies = async (): Promise<string[]> => {
   }
 };
 
+interface CreateInvoiceParams {
+  price_amount: number;
+  price_currency: string;
+  order_id: string;
+  order_description: string;
+  ipn_callback_url: string;
+  success_url?: string;
+  cancel_url?: string;
+  pay_currency?: string;
+}
+
+interface CreateInvoiceResponse {
+  id: string;
+  order_id: string;
+  order_description: string;
+  price_amount: string;
+  price_currency: string;
+  pay_currency: string | null;
+  ipn_callback_url: string;
+  invoice_url: string;
+  success_url: string | null;
+  cancel_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const createInvoice = async (params: CreateInvoiceParams): Promise<CreateInvoiceResponse> => {
+  try {
+    const response = await getClient().post<CreateInvoiceResponse>('/invoice', params);
+    logger.info(`NOWPayments invoice created: ${response.data.id}`);
+    return response.data;
+  } catch (error: any) {
+    logger.error('NOWPayments createInvoice error:', error.response?.data || error.message);
+    throw new Error('Failed to create invoice with NOWPayments');
+  }
+};
+
 export const getEstimatedPrice = async (
   amount: number,
   currencyFrom: string,

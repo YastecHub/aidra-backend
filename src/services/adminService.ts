@@ -1,7 +1,32 @@
+import bcrypt from 'bcryptjs';
 import User from '../models/User';
 import Campaign from '../models/Campaign';
 import Donation from '../models/Donation';
 import logger from '../config/logger';
+
+// ── Admin Registration ──
+
+export const registerAdmin = async (email: string, password: string, fullName: string) => {
+  const existing = await User.findOne({ email });
+  if (existing) throw new Error('Email already registered');
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const admin = await User.create({
+    email,
+    password: hashedPassword,
+    fullName,
+    role: 'admin',
+    isVerified: true,
+    isKYCCompleted: true,
+    kycStatus: 'approved'
+  });
+
+  logger.info(`Admin account created: ${admin._id} (${email})`);
+  return {
+    message: 'Admin registered successfully',
+    user: { _id: admin._id, email: admin.email, fullName: admin.fullName, role: admin.role }
+  };
+};
 
 // ── KYC Management ──
 

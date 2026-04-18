@@ -7,7 +7,50 @@ import * as adminValidator from '../validators/adminValidator';
 
 const router = Router();
 
-// All admin routes require authentication + admin role
+/**
+ * @swagger
+ * /api/admin/register:
+ *   post:
+ *     summary: Register a new admin account (requires x-admin-secret header)
+ *     description: Creates an admin user. Requires the ADMIN_BOOTSTRAP_SECRET env value passed in the `x-admin-secret` header. Admin is auto-verified with KYC bypassed.
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: header
+ *         name: x-admin-secret
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ADMIN_BOOTSTRAP_SECRET value from your server .env
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - fullName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *               fullName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Admin registered successfully
+ *       403:
+ *         description: Invalid admin secret
+ *       400:
+ *         description: Validation error or email already registered
+ */
+router.post('/register', adminValidator.registerAdminValidator, validate, adminController.registerAdmin);
+
+// All routes below require authentication + admin role
 router.use(authenticate, authorize('admin'));
 
 // ── KYC Management ──

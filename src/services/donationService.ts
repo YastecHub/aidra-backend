@@ -55,6 +55,57 @@ export const createDonation = async (data: {
   };
 };
 
+export const createDonationCheckout = async (data: {
+  campaignId: string;
+  amount: number;
+  donorEmail?: string;
+  payCurrency?: string;
+  successUrl?: string;
+  cancelUrl?: string;
+}) => {
+  const campaign = await Campaign.findById(data.campaignId);
+  if (!campaign || campaign.status !== 'active') {
+    throw new Error('Campaign not found or not active');
+  }
+
+  const platformFee = data.amount * (PLATFORM_FEE_PERCENT / 100);
+  const netAmount = data.amount - platformFee;
+
+  const donation = await Donation.create({
+    campaign: data.campaignId,
+    amount: data.amount,
+    cryptoCurrency: data.payCurrency || null,
+    paymentMethod: 'crypto',
+    donorEmail: data.donorEmail || null,
+    paymentStatus: 'waiting',
+    status: 'pending',
+    platformFee,
+    netAmount
+  });
+
+  const invoice = await nowPaymentsService.createInvoice({
+    price_amount: data.amount,
+    price_currency: 'usd',
+    order_id: donation._id.toString(),
+    order_description: `Donation to ${campaign.title}`,
+    ipn_callback_url: `${process.env.BASE_URL}/api/payments/ipn`,
+    success_url: data.successUrl,
+    cancel_url: data.cancelUrl,
+    pay_currency: data.payCurrency
+  });
+
+  donation.nowPaymentId = invoice.id;
+  await donation.save();
+
+  return {
+    donationId: donation._id,
+    invoiceId: invoice.id,
+    invoiceUrl: invoice.invoice_url,
+    amount: data.amount,
+    currency: 'usd'
+  };
+};
+
 export const processIPN = async (ipnData: any) => {
   const { order_id, payment_status } = ipnData;
 
