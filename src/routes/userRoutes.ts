@@ -3,6 +3,7 @@ import * as userController from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import * as userValidator from '../validators/userValidator';
+import { uploadKYC } from '../middleware/upload';
 
 const router = Router();
 
@@ -88,7 +89,7 @@ router.patch('/change-password', authenticate, userValidator.changePasswordValid
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -98,12 +99,15 @@ router.patch('/change-password', authenticate, userValidator.changePasswordValid
  *                 type: array
  *                 items:
  *                   type: string
- *                   format: uri
+ *                   format: binary
+ *                 description: KYC documents (PDF, JPEG, PNG - Max 10MB per file)
  *     responses:
  *       200:
  *         description: KYC submitted for review
+ *       400:
+ *         description: Invalid file type or no files provided
  */
-router.post('/kyc/submit', authenticate, userValidator.submitKYCValidator, validate, userController.submitKYC);
+router.post('/kyc/submit', authenticate, uploadKYC.array('documents'), userValidator.submitKYCValidator, validate, userController.submitKYC);
 
 /**
  * @swagger

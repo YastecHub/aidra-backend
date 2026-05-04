@@ -1,7 +1,15 @@
 import 'dotenv/config';
+import path from 'path';
+import fs from 'fs';
 import { connectDB } from './config/database';
 import logger from './config/logger';
 import app from './app';
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads/kyc');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 connectDB();
 

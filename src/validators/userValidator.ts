@@ -11,6 +11,6 @@ export const changePasswordValidator = [
 ];
 
 export const submitKYCValidator = [
-  body('documents').isArray({ min: 1 }).withMessage('At least one document is required'),
-  body('documents.*').isURL().withMessage('Each document must be a valid URL')
+  // No body validation needed for file uploads
+  // File validation is handled by multer middleware
 ];
