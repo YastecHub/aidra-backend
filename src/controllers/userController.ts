@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as userService from '../services/userService';
+import { saveBase64KYCDocuments } from '../middleware/upload';
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -32,14 +33,22 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
 
 export const submitKYC = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.files || (Array.isArray(req.files) ? req.files.length === 0 : Object.keys(req.files).length === 0)) {
+    let documentPaths: string[] = [];
+
+    const hasMultipart = !!req.files && (Array.isArray(req.files)
+      ? req.files.length > 0
+      : Object.keys(req.files).length > 0);
+
+    if (hasMultipart) {
+      const fileArray = Array.isArray(req.files) ? req.files : Object.values(req.files!).flat();
+      documentPaths = (fileArray as Express.Multer.File[]).map((file) => file.path);
+    } else if (Array.isArray(req.body?.documents) && req.body.documents.length > 0) {
+      documentPaths = await saveBase64KYCDocuments(req.body.documents);
+    } else {
       res.status(400).json({ error: 'At least one document is required' });
       return;
     }
 
-    const fileArray = Array.isArray(req.files) ? req.files : Object.values(req.files).flat();
-    const documentPaths = (fileArray as Express.Multer.File[]).map((file) => file.path);
-    
     const result = await userService.submitKYC(req.user!.userId, documentPaths);
     res.json(result);
   } catch (error) {

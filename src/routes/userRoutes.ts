@@ -100,7 +100,19 @@ router.patch('/change-password', authenticate, userValidator.changePasswordValid
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: KYC documents (PDF, JPEG, PNG - Max 10MB per file)
+ *                 description: KYC documents (PDF, JPEG, PNG - Max 50MB per file)
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - documents
+ *             properties:
+ *               documents:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   description: Base64 data URI (e.g. "data:image/jpeg;base64,...")
+ *                 description: KYC documents as base64 data URIs (PDF, JPEG, PNG - Max 50MB per file)
  *     responses:
  *       200:
  *         description: KYC submitted for review

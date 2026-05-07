@@ -11,6 +11,5 @@ export const changePasswordValidator = [
 ];
 
 export const submitKYCValidator = [
-  // No body validation needed for file uploads
-  // File validation is handled by multer middleware
+  body('documents').optional().isArray().withMessage('documents must be an array of base64 data URIs')
 ];
