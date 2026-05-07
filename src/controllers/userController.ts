@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as userService from '../services/userService';
-import { saveBase64KYCDocuments } from '../middleware/upload';
+import { uploadBase64KYCToCloudinary, uploadKYCFilesToCloudinary } from '../middleware/upload';
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -41,9 +41,9 @@ export const submitKYC = async (req: AuthRequest, res: Response): Promise<void> 
 
     if (hasMultipart) {
       const fileArray = Array.isArray(req.files) ? req.files : Object.values(req.files!).flat();
-      documentPaths = (fileArray as Express.Multer.File[]).map((file) => file.path);
+      documentPaths = await uploadKYCFilesToCloudinary(fileArray as Express.Multer.File[]);
     } else if (Array.isArray(req.body?.documents) && req.body.documents.length > 0) {
-      documentPaths = await saveBase64KYCDocuments(req.body.documents);
+      documentPaths = await uploadBase64KYCToCloudinary(req.body.documents);
     } else {
       res.status(400).json({ error: 'At least one document is required' });
       return;
