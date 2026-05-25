@@ -3,7 +3,8 @@ import cloudinary from '../config/cloudinary';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png'];
-const CLOUDINARY_FOLDER = 'aidra/kyc';
+const CLOUDINARY_KYC_FOLDER = 'aidra/kyc';
+const CLOUDINARY_CAMPAIGNS_FOLDER = 'aidra/campaigns';
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (ALLOWED_MIMES.includes(file.mimetype)) {
@@ -21,9 +22,9 @@ export const uploadKYC = multer({
   }
 });
 
-const uploadDataUriToCloudinary = async (dataUri: string): Promise<string> => {
+const uploadDataUriToCloudinary = async (dataUri: string, folder: string = CLOUDINARY_KYC_FOLDER): Promise<string> => {
   const result = await cloudinary.uploader.upload(dataUri, {
-    folder: CLOUDINARY_FOLDER,
+    folder,
     resource_type: 'auto'
   });
   return result.secure_url;
@@ -39,6 +40,46 @@ export const uploadKYCFilesToCloudinary = async (files: Express.Multer.File[]): 
 };
 
 const DATA_URI_REGEX = /^data:([\w.+-]+\/[\w.+-]+);base64,(.+)$/;
+const IMAGE_SIGNATURES = [
+  { prefix: '/9j/', mime: 'image/jpeg' },
+  { prefix: 'iVBORw0KGgo', mime: 'image/png' },
+  { prefix: 'R0lGODdh', mime: 'image/gif' },
+  { prefix: 'R0lGODlh', mime: 'image/gif' }
+];
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif'];
+
+const normalizeBase64ImageToDataUri = (value: unknown): string => {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error('Image must be a non-empty base64 string or data URI');
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.startsWith('data:')) {
+    const match = trimmed.match(DATA_URI_REGEX);
+    if (!match) {
+      throw new Error('Image must be a valid base64 data URI (expected "data:<mime>;base64,<payload>")');
+    }
+
+    const mime = match[1];
+    if (!ALLOWED_IMAGE_MIMES.includes(mime)) {
+      throw new Error(`Image MIME type "${mime}" is not allowed. Only JPEG, PNG, and GIF are supported.`);
+    }
+
+    return trimmed;
+  }
+
+  const signature = IMAGE_SIGNATURES.find((sig) => trimmed.startsWith(sig.prefix));
+  if (!signature) {
+    throw new Error('Image must be a valid base64-encoded JPEG, PNG, or GIF image');
+  }
+
+  return `data:${signature.mime};base64,${trimmed}`;
+};
+
+export const uploadBase64ImageToCloudinary = async (image: unknown): Promise<string> => {
+  const dataUri = normalizeBase64ImageToDataUri(image);
+  return uploadDataUriToCloudinary(dataUri, CLOUDINARY_CAMPAIGNS_FOLDER);
+};
 
 export const uploadBase64KYCToCloudinary = async (documents: unknown[]): Promise<string[]> => {
   const urls: string[] = [];

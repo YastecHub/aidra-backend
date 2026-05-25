@@ -1,10 +1,27 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as campaignService from '../services/campaignService';
+import { uploadBase64ImageToCloudinary } from '../middleware/upload';
+
+const isValidUrl = (value: unknown): boolean => {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
 
 export const createCampaign = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const campaign = await campaignService.createCampaign(req.user!.userId, req.body);
+    const requestBody = { ...req.body };
+
+    if (requestBody.image && !isValidUrl(requestBody.image)) {
+      requestBody.image = await uploadBase64ImageToCloudinary(requestBody.image);
+    }
+
+    const campaign = await campaignService.createCampaign(req.user!.userId, requestBody);
     res.status(201).json(campaign);
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
@@ -33,7 +50,13 @@ export const getCampaignById = async (req: AuthRequest, res: Response): Promise<
 
 export const updateCampaign = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const campaign = await campaignService.updateCampaign(req.params.id, req.user!.userId, req.body);
+    const updates = { ...req.body };
+
+    if (updates.image && !isValidUrl(updates.image)) {
+      updates.image = await uploadBase64ImageToCloudinary(updates.image);
+    }
+
+    const campaign = await campaignService.updateCampaign(req.params.id, req.user!.userId, updates);
     res.json(campaign);
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
