@@ -16,7 +16,8 @@
       "Bash(curl -s http://localhost:5000/api/campaigns)",
       "Bash(curl -s -X POST http://localhost:5000/api/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test-campaign@example.com\",\"password\":\"test123456\",\"fullName\":\"Test User\"}')",
       "Bash(curl -s \"http://localhost:5000/api/payments/status/69d830a6d3cecc9b0b3191ac\")",
-      "Bash(node -e \"process.stdin.on\\('data',d=>console.log\\(JSON.stringify\\(JSON.parse\\(d\\),null,2\\)\\)\\)\")"
+      "Bash(node -e \"process.stdin.on\\('data',d=>console.log\\(JSON.stringify\\(JSON.parse\\(d\\),null,2\\)\\)\\)\")",
+      "PowerShell(npx tsc --noEmit)"
     ]
   }
 }

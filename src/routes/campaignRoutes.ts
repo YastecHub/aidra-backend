@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth';
 import { requireKYC } from '../middleware/kyc';
 import { validate } from '../middleware/validate';
 import * as campaignValidator from '../validators/campaignValidator';
+import { uploadCampaignImage } from '../middleware/upload';
 
 const router = Router();
 
@@ -18,6 +19,33 @@ const router = Router();
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *               - goalAmount
+ *               - image
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               goalAmount:
+ *                 type: number
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Campaign image file (JPEG, PNG, GIF)
+ *               category:
+ *                 type: string
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *               walletAddress:
+ *                 type: string
+ *                 description: Campaign owner's crypto wallet for payouts
  *         application/json:
  *           schema:
  *             type: object
@@ -35,7 +63,7 @@ const router = Router();
  *                 type: number
  *               image:
  *                 type: string
- *                 format: uri
+ *                 description: Image as an http(s) URL or a base64 data URI
  *               category:
  *                 type: string
  *               endDate:
@@ -50,7 +78,7 @@ const router = Router();
  *       403:
  *         description: KYC verification required
  */
-router.post('/', authenticate, requireKYC, campaignValidator.createCampaignValidator, validate, campaignController.createCampaign);
+router.post('/', authenticate, requireKYC, uploadCampaignImage.single('image'), campaignValidator.createCampaignValidator, validate, campaignController.createCampaign);
 
 /**
  * @swagger
@@ -125,6 +153,22 @@ router.get('/:id', campaignValidator.campaignIdValidator, validate, campaignCont
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               goalAmount:
+ *                 type: number
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Campaign image file (JPEG, PNG, GIF)
+ *               walletAddress:
+ *                 type: string
  *         application/json:
  *           schema:
  *             type: object
@@ -137,13 +181,14 @@ router.get('/:id', campaignValidator.campaignIdValidator, validate, campaignCont
  *                 type: number
  *               image:
  *                 type: string
+ *                 description: Image as an http(s) URL or a base64 data URI
  *               walletAddress:
  *                 type: string
  *     responses:
  *       200:
  *         description: Campaign updated
  */
-router.patch('/:id', authenticate, campaignValidator.updateCampaignValidator, validate, campaignController.updateCampaign);
+router.patch('/:id', authenticate, uploadCampaignImage.single('image'), campaignValidator.updateCampaignValidator, validate, campaignController.updateCampaign);
 
 /**
  * @swagger

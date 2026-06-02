@@ -22,6 +22,22 @@ export const uploadKYC = multer({
   }
 });
 
+const imageFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (ALLOWED_IMAGE_MIMES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only JPEG, PNG, and GIF images are allowed.'));
+  }
+};
+
+export const uploadCampaignImage = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE
+  }
+});
+
 const uploadDataUriToCloudinary = async (dataUri: string, folder: string = CLOUDINARY_KYC_FOLDER): Promise<string> => {
   const result = await cloudinary.uploader.upload(dataUri, {
     folder,
@@ -78,6 +94,11 @@ const normalizeBase64ImageToDataUri = (value: unknown): string => {
 
 export const uploadBase64ImageToCloudinary = async (image: unknown): Promise<string> => {
   const dataUri = normalizeBase64ImageToDataUri(image);
+  return uploadDataUriToCloudinary(dataUri, CLOUDINARY_CAMPAIGNS_FOLDER);
+};
+
+export const uploadCampaignFileToCloudinary = async (file: Express.Multer.File): Promise<string> => {
+  const dataUri = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
   return uploadDataUriToCloudinary(dataUri, CLOUDINARY_CAMPAIGNS_FOLDER);
 };
 

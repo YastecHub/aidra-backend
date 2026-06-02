@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as campaignService from '../services/campaignService';
-import { uploadBase64ImageToCloudinary } from '../middleware/upload';
+import { uploadBase64ImageToCloudinary, uploadCampaignFileToCloudinary } from '../middleware/upload';
 
 const isValidUrl = (value: unknown): boolean => {
   if (typeof value !== 'string') return false;
@@ -17,7 +17,9 @@ export const createCampaign = async (req: AuthRequest, res: Response): Promise<v
   try {
     const requestBody = { ...req.body };
 
-    if (requestBody.image && !isValidUrl(requestBody.image)) {
+    if (req.file) {
+      requestBody.image = await uploadCampaignFileToCloudinary(req.file);
+    } else if (requestBody.image && !isValidUrl(requestBody.image)) {
       requestBody.image = await uploadBase64ImageToCloudinary(requestBody.image);
     }
 
@@ -52,7 +54,9 @@ export const updateCampaign = async (req: AuthRequest, res: Response): Promise<v
   try {
     const updates = { ...req.body };
 
-    if (updates.image && !isValidUrl(updates.image)) {
+    if (req.file) {
+      updates.image = await uploadCampaignFileToCloudinary(req.file);
+    } else if (updates.image && !isValidUrl(updates.image)) {
       updates.image = await uploadBase64ImageToCloudinary(updates.image);
     }
 

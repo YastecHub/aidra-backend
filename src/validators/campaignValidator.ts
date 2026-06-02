@@ -10,7 +10,11 @@ const isBase64ImageString = (value: string): boolean => {
   return ['/9j/', 'iVBORw0KGgo', 'R0lGODdh', 'R0lGODlh'].some((prefix) => trimmed.startsWith(prefix));
 };
 
-const imageValidator = (value: unknown): boolean => {
+const imageValidator = (value: unknown, { req }: any): boolean => {
+  if (req.file) {
+    return true;
+  }
+
   if (typeof value !== 'string' || !value.trim()) {
     throw new Error('Image is required');
   }
@@ -41,7 +45,11 @@ export const updateCampaignValidator = [
   body('title').optional().trim().notEmpty().withMessage('Title cannot be empty'),
   body('description').optional().trim().notEmpty().withMessage('Description cannot be empty'),
   body('goalAmount').optional().isFloat({ min: 1 }).withMessage('Goal amount must be greater than 0'),
-  body('image').optional().custom((value) => {
+  body('image').optional().custom((value, { req }) => {
+    if (req.file) {
+      return true;
+    }
+
     if (typeof value !== 'string' || !value.trim()) {
       throw new Error('Image must be a non-empty string');
     }

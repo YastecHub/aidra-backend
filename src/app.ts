@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
@@ -27,5 +27,10 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
+
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  res.status(400).json({ error: err?.message || 'Bad request' });
+};
+app.use(errorHandler);
 
 export default app;
