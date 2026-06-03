@@ -1,8 +1,9 @@
 import multer from 'multer';
-import cloudinary from '../config/cloudinary';
+import cloudinary, { assertCloudinaryConfigured } from '../config/cloudinary';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png'];
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif'];
 const CLOUDINARY_KYC_FOLDER = 'aidra/kyc';
 const CLOUDINARY_CAMPAIGNS_FOLDER = 'aidra/campaigns';
 
@@ -39,6 +40,8 @@ export const uploadCampaignImage = multer({
 });
 
 const uploadDataUriToCloudinary = async (dataUri: string, folder: string = CLOUDINARY_KYC_FOLDER): Promise<string> => {
+  assertCloudinaryConfigured();
+
   const result = await cloudinary.uploader.upload(dataUri, {
     folder,
     resource_type: 'auto'
@@ -62,7 +65,6 @@ const IMAGE_SIGNATURES = [
   { prefix: 'R0lGODdh', mime: 'image/gif' },
   { prefix: 'R0lGODlh', mime: 'image/gif' }
 ];
-const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif'];
 
 const normalizeBase64ImageToDataUri = (value: unknown): string => {
   if (typeof value !== 'string' || !value.trim()) {

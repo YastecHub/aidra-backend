@@ -37,33 +37,7 @@ const router = Router();
  *               image:
  *                 type: string
  *                 format: binary
- *                 description: Campaign image file (JPEG, PNG, GIF)
- *               category:
- *                 type: string
- *               endDate:
- *                 type: string
- *                 format: date
- *               walletAddress:
- *                 type: string
- *                 description: Campaign owner's crypto wallet for payouts
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - description
- *               - goalAmount
- *               - image
- *             properties:
- *               title:
- *                 type: string
- *               description:
- *                 type: string
- *               goalAmount:
- *                 type: number
- *               image:
- *                 type: string
- *                 description: Image as an http(s) URL or a base64 data URI
+ *                 description: Campaign image file (JPEG, PNG, GIF). Uploaded to Cloudinary.
  *               category:
  *                 type: string
  *               endDate:
@@ -166,22 +140,7 @@ router.get('/:id', campaignValidator.campaignIdValidator, validate, campaignCont
  *               image:
  *                 type: string
  *                 format: binary
- *                 description: Campaign image file (JPEG, PNG, GIF)
- *               walletAddress:
- *                 type: string
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               description:
- *                 type: string
- *               goalAmount:
- *                 type: number
- *               image:
- *                 type: string
- *                 description: Image as an http(s) URL or a base64 data URI
+ *                 description: Campaign image file (JPEG, PNG, GIF). Uploaded to Cloudinary.
  *               walletAddress:
  *                 type: string
  *     responses:
