@@ -1,5 +1,6 @@
 import multer from 'multer';
 import cloudinary, { assertCloudinaryConfigured } from '../config/cloudinary';
+import { ValidationClientException } from '../utils/clientError';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -11,7 +12,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only PDF, JPEG, and PNG are allowed.'));
+    cb(new ValidationClientException('Invalid file type. Only PDF, JPEG, and PNG are allowed.'));
   }
 };
 
@@ -27,7 +28,7 @@ const imageFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFil
   if (ALLOWED_IMAGE_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, and GIF images are allowed.'));
+    cb(new ValidationClientException('Invalid file type. Only JPEG, PNG, and GIF images are allowed.'));
   }
 };
 
@@ -68,19 +69,19 @@ const IMAGE_SIGNATURES = [
 
 const normalizeBase64ImageToDataUri = (value: unknown): string => {
   if (typeof value !== 'string' || !value.trim()) {
-    throw new Error('Image must be a non-empty base64 string or data URI');
+    throw new ValidationClientException('Image must be a non-empty base64 string or data URI');
   }
 
   const trimmed = value.trim();
   if (trimmed.startsWith('data:')) {
     const match = trimmed.match(DATA_URI_REGEX);
     if (!match) {
-      throw new Error('Image must be a valid base64 data URI (expected "data:<mime>;base64,<payload>")');
+      throw new ValidationClientException('Image must be a valid base64 data URI (expected "data:<mime>;base64,<payload>")');
     }
 
     const mime = match[1];
     if (!ALLOWED_IMAGE_MIMES.includes(mime)) {
-      throw new Error(`Image MIME type "${mime}" is not allowed. Only JPEG, PNG, and GIF are supported.`);
+      throw new ValidationClientException(`Image MIME type "${mime}" is not allowed. Only JPEG, PNG, and GIF are supported.`);
     }
 
     return trimmed;
@@ -88,7 +89,7 @@ const normalizeBase64ImageToDataUri = (value: unknown): string => {
 
   const signature = IMAGE_SIGNATURES.find((sig) => trimmed.startsWith(sig.prefix));
   if (!signature) {
-    throw new Error('Image must be a valid base64-encoded JPEG, PNG, or GIF image');
+    throw new ValidationClientException('Image must be a valid base64-encoded JPEG, PNG, or GIF image');
   }
 
   return `data:${signature.mime};base64,${trimmed}`;
@@ -111,23 +112,23 @@ export const uploadBase64KYCToCloudinary = async (documents: unknown[]): Promise
     const entry = documents[i];
 
     if (typeof entry !== 'string') {
-      throw new Error(`documents[${i}] must be a base64 data URI string`);
+      throw new ValidationClientException(`documents[${i}] must be a base64 data URI string`);
     }
 
     const match = entry.match(DATA_URI_REGEX);
     if (!match) {
-      throw new Error(`documents[${i}] is not a valid base64 data URI (expected "data:<mime>;base64,<payload>")`);
+      throw new ValidationClientException(`documents[${i}] is not a valid base64 data URI (expected "data:<mime>;base64,<payload>")`);
     }
 
     const [, mime, payload] = match;
 
     if (!ALLOWED_MIMES.includes(mime)) {
-      throw new Error(`documents[${i}] has invalid file type "${mime}". Only PDF, JPEG, and PNG are allowed.`);
+      throw new ValidationClientException(`documents[${i}] has invalid file type "${mime}". Only PDF, JPEG, and PNG are allowed.`);
     }
 
     const sizeBytes = Math.floor((payload.length * 3) / 4);
     if (sizeBytes > MAX_FILE_SIZE) {
-      throw new Error(`documents[${i}] exceeds the 50MB size limit`);
+      throw new ValidationClientException(`documents[${i}] exceeds the 50MB size limit`);
     }
 
     urls.push(await uploadDataUriToCloudinary(entry));

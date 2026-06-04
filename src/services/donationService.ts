@@ -2,6 +2,13 @@ import Donation from '../models/Donation';
 import Campaign from '../models/Campaign';
 import * as nowPaymentsService from './nowPaymentsService';
 import logger from '../config/logger';
+import {
+  ApiErrorCode,
+  ClientException,
+  ForbiddenClientException,
+  NotFoundClientException,
+  ValidationClientException
+} from '../utils/clientError';
 
 const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENT || '5');
 
@@ -11,9 +18,11 @@ export const createDonation = async (data: {
   payCurrency: string;
   donorEmail?: string;
 }) => {
-  const campaign = await Campaign.findById(data.campaignId);
+  validateDonationInput(data.amount, data.payCurrency);
+
+  const campaign = await Campaign.findById(data.campaignId).select('title status').lean();
   if (!campaign || campaign.status !== 'active') {
-    throw new Error('Campaign not found or not active');
+    throw new ClientException('Campaign not found or not active', ApiErrorCode.CAMPAIGN_NOT_ACTIVE);
   }
 
   const platformFee = data.amount * (PLATFORM_FEE_PERCENT / 100);
@@ -63,9 +72,11 @@ export const createDonationCheckout = async (data: {
   successUrl?: string;
   cancelUrl?: string;
 }) => {
-  const campaign = await Campaign.findById(data.campaignId);
+  validateDonationInput(data.amount, data.payCurrency);
+
+  const campaign = await Campaign.findById(data.campaignId).select('title status').lean();
   if (!campaign || campaign.status !== 'active') {
-    throw new Error('Campaign not found or not active');
+    throw new ClientException('Campaign not found or not active', ApiErrorCode.CAMPAIGN_NOT_ACTIVE);
   }
 
   const platformFee = data.amount * (PLATFORM_FEE_PERCENT / 100);
@@ -141,8 +152,10 @@ export const processIPN = async (ipnData: any) => {
 };
 
 export const getPaymentStatus = async (donationId: string) => {
-  const donation = await Donation.findById(donationId);
-  if (!donation) throw new Error('Donation not found');
+  const donation = await Donation.findById(donationId)
+    .select('campaign amount cryptoAmount cryptoCurrency nowPaymentId payAddress paymentStatus status createdAt updatedAt')
+    .lean();
+  if (!donation) throw new NotFoundClientException('Donation not found');
 
   if (donation.nowPaymentId) {
     const liveStatus = await nowPaymentsService.getPaymentStatus(donation.nowPaymentId);
@@ -152,8 +165,21 @@ export const getPaymentStatus = async (donationId: string) => {
 };
 
 export const getCampaignDonations = async (campaignId: string, userId: string) => {
-  const campaign = await Campaign.findOne({ _id: campaignId, owner: userId });
-  if (!campaign) throw new Error('Unauthorized');
+  const campaign = await Campaign.findOne({ _id: campaignId, owner: userId }).select('_id').lean();
+  if (!campaign) throw new ForbiddenClientException('Unauthorized');
 
-  return await Donation.find({ campaign: campaignId }).sort('-createdAt');
+  return await Donation.find({ campaign: campaignId })
+    .select('donorEmail amount cryptoAmount cryptoCurrency paymentStatus status platformFee netAmount createdAt updatedAt')
+    .sort('-createdAt')
+    .lean();
+};
+
+const validateDonationInput = (amount: number, payCurrency?: string): void => {
+  if (!Number.isFinite(Number(amount)) || Number(amount) < 1 || Number(amount) > 1000000) {
+    throw new ValidationClientException('Amount must be between $1 and $1,000,000');
+  }
+
+  if (payCurrency !== undefined && !/^[a-z0-9]{2,20}$/i.test(payCurrency)) {
+    throw new ValidationClientException('Crypto currency must be alphanumeric and 2-20 characters');
+  }
 };

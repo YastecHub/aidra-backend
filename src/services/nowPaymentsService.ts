@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import crypto from 'crypto';
 import logger from '../config/logger';
+import { ApiErrorCode, ClientException } from '../utils/clientError';
 
 const SANDBOX_BASE = 'https://api-sandbox.nowpayments.io/v1';
 const PRODUCTION_BASE = 'https://api.nowpayments.io/v1';
@@ -68,7 +69,7 @@ export const createPayment = async (params: CreatePaymentParams): Promise<Create
     return response.data;
   } catch (error: any) {
     logger.error('NOWPayments createPayment error:', error.response?.data || error.message);
-    throw new Error('Failed to create payment with NOWPayments');
+    throw new ClientException('Failed to create payment with NOWPayments', ApiErrorCode.PAYMENT_PROVIDER_ERROR, 502);
   }
 };
 
@@ -78,7 +79,7 @@ export const getPaymentStatus = async (paymentId: string): Promise<PaymentStatus
     return response.data;
   } catch (error: any) {
     logger.error('NOWPayments getPaymentStatus error:', error.response?.data || error.message);
-    throw new Error('Failed to get payment status');
+    throw new ClientException('Failed to get payment status', ApiErrorCode.PAYMENT_PROVIDER_ERROR, 502);
   }
 };
 
@@ -111,7 +112,7 @@ export const getAvailableCurrencies = async (): Promise<string[]> => {
     return response.data.currencies;
   } catch (error: any) {
     logger.error('NOWPayments getCurrencies error:', error.response?.data || error.message);
-    throw new Error('Failed to get available currencies');
+    throw new ClientException('Failed to get available currencies', ApiErrorCode.PAYMENT_PROVIDER_ERROR, 502);
   }
 };
 
@@ -148,7 +149,7 @@ export const createInvoice = async (params: CreateInvoiceParams): Promise<Create
     return response.data;
   } catch (error: any) {
     logger.error('NOWPayments createInvoice error:', error.response?.data || error.message);
-    throw new Error('Failed to create invoice with NOWPayments');
+    throw new ClientException('Failed to create invoice with NOWPayments', ApiErrorCode.PAYMENT_PROVIDER_ERROR, 502);
   }
 };
 
@@ -164,6 +165,6 @@ export const getEstimatedPrice = async (
     return response.data;
   } catch (error: any) {
     logger.error('NOWPayments getEstimate error:', error.response?.data || error.message);
-    throw new Error('Failed to get estimated price');
+    throw new ClientException('Failed to get estimated price', ApiErrorCode.PAYMENT_PROVIDER_ERROR, 502);
   }
 };

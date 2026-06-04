@@ -16,4 +16,7 @@ const campaignSchema = new Schema<ICampaignDocument>({
   walletAddress: { type: String, default: null }
 }, { timestamps: true });
 
+campaignSchema.index({ status: 1, category: 1, createdAt: -1 });
+campaignSchema.index({ owner: 1, createdAt: -1 });
+
 export default mongoose.model<ICampaignDocument>('Campaign', campaignSchema);

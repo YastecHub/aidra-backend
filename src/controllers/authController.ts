@@ -4,6 +4,7 @@ import * as authService from '../services/authService';
 import { verifyRefreshToken, generateAccessToken } from '../utils/jwt';
 import User from '../models/User';
 import { sendError, sendSuccess } from '../utils/apiResponse';
+import { ApiErrorCode, UnauthorizedClientException, ValidationClientException } from '../utils/clientError';
 
 export const register = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -69,14 +70,14 @@ export const refreshToken = async (req: AuthRequest, res: Response): Promise<voi
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      sendError(res, 'Refresh token required');
+      sendError(res, new ValidationClientException('Refresh token required'));
       return;
     }
 
     const decoded = verifyRefreshToken(refreshToken);
-    const user = await User.findById(decoded.userId).select('+refreshToken');
+    const user = await User.findById(decoded.userId).select('+refreshToken email role isVerified isKYCCompleted');
     if (!user || user.refreshToken !== refreshToken) {
-      sendError(res, 'Invalid refresh token', 401);
+      sendError(res, new UnauthorizedClientException('Invalid refresh token', ApiErrorCode.INVALID_REFRESH_TOKEN));
       return;
     }
 
@@ -91,7 +92,7 @@ export const refreshToken = async (req: AuthRequest, res: Response): Promise<voi
 
     sendSuccess(res, { accessToken }, 200, 'Token refreshed successfully');
   } catch (error) {
-    sendError(res, 'Invalid or expired refresh token', 401);
+    sendError(res, new UnauthorizedClientException('Invalid or expired refresh token', ApiErrorCode.INVALID_REFRESH_TOKEN));
   }
 };
 

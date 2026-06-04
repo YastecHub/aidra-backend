@@ -3,13 +3,14 @@ import * as donationService from '../services/donationService';
 import * as nowPaymentsService from '../services/nowPaymentsService';
 import logger from '../config/logger';
 import { sendError, sendSuccess } from '../utils/apiResponse';
+import { ApiErrorCode, ClientException, ForbiddenClientException } from '../utils/clientError';
 
 export const handleIPN = async (req: Request, res: Response): Promise<void> => {
   try {
     const signature = req.headers['x-nowpayments-sig'] as string;
     if (!signature || !nowPaymentsService.verifyIPNSignature(req.body, signature)) {
       logger.warn('IPN signature verification failed');
-      sendError(res, 'Invalid signature', 403);
+      sendError(res, new ForbiddenClientException('Invalid signature', ApiErrorCode.INVALID_SIGNATURE));
       return;
     }
 
@@ -17,7 +18,7 @@ export const handleIPN = async (req: Request, res: Response): Promise<void> => {
     sendSuccess(res, { status: 'ok' }, 200, 'IPN processed successfully');
   } catch (error) {
     logger.error('IPN processing error:', error);
-    sendError(res, 'IPN processing failed', 500);
+    sendError(res, new ClientException('IPN processing failed', ApiErrorCode.IPN_PROCESSING_FAILED, 500));
   }
 };
 

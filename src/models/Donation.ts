@@ -25,4 +25,8 @@ const donationSchema = new Schema<IDonationDocument>({
   netAmount: { type: Number, default: 0 }
 }, { timestamps: true });
 
+donationSchema.index({ campaign: 1, createdAt: -1 });
+donationSchema.index({ status: 1, createdAt: -1 });
+donationSchema.index({ paymentStatus: 1 });
+
 export default mongoose.model<IDonationDocument>('Donation', donationSchema);

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../types';
 import * as adminService from '../services/adminService';
 import { sendError, sendSuccess } from '../utils/apiResponse';
+import { ApiErrorCode, ClientException, ForbiddenClientException } from '../utils/clientError';
 
 // ── Admin Registration (secret-protected) ──
 
@@ -11,11 +12,11 @@ export const registerAdmin = async (req: Request, res: Response): Promise<void> 
     const expectedSecret = process.env.ADMIN_BOOTSTRAP_SECRET;
 
     if (!expectedSecret) {
-      sendError(res, 'Admin registration is disabled (secret not configured)', 500);
+      sendError(res, new ClientException('Admin registration is disabled (secret not configured)', ApiErrorCode.ADMIN_REGISTRATION_DISABLED, 500));
       return;
     }
     if (providedSecret !== expectedSecret) {
-      sendError(res, 'Invalid admin secret', 403);
+      sendError(res, new ForbiddenClientException('Invalid admin secret', ApiErrorCode.INVALID_ADMIN_SECRET));
       return;
     }
 

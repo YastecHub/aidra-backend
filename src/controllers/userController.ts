@@ -3,6 +3,7 @@ import { AuthRequest } from '../types';
 import * as userService from '../services/userService';
 import { uploadBase64KYCToCloudinary, uploadKYCFilesToCloudinary } from '../middleware/upload';
 import { sendError, sendSuccess } from '../utils/apiResponse';
+import { ValidationClientException } from '../utils/clientError';
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -46,7 +47,7 @@ export const submitKYC = async (req: AuthRequest, res: Response): Promise<void> 
     } else if (Array.isArray(req.body?.documents) && req.body.documents.length > 0) {
       documentPaths = await uploadBase64KYCToCloudinary(req.body.documents);
     } else {
-      sendError(res, 'At least one document is required');
+      sendError(res, new ValidationClientException('At least one document is required'));
       return;
     }
 

@@ -70,8 +70,9 @@ describe('Auth API', () => {
           fullName: 'Test User'
         });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(res.body.error).toContain('already registered');
+      expect(res.body.code).toBe('DUPLICATE_EMAIL');
     });
   });
 
@@ -91,7 +92,8 @@ describe('Auth API', () => {
           password: 'wrongpassword'
         });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
+      expect(res.body.code).toBe('INVALID_CREDENTIALS');
     });
 
     it('should fail with unverified email', async () => {
@@ -109,7 +111,8 @@ describe('Auth API', () => {
           password: 'password123'
         });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
+      expect(res.body.code).toBe('INVALID_CREDENTIALS');
     });
   });
 });

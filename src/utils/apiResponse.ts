@@ -1,10 +1,12 @@
 import { Response } from 'express';
+import { ClientException } from './clientError';
 
 type ResponseBody<T> = {
   success: boolean;
   statusCode: number;
   message: string;
   data: T | null;
+  code?: string;
   error?: string;
   errors?: unknown;
   timestamp: string;
@@ -59,6 +61,8 @@ export const sendError = (
   statusCode = 400,
   details?: unknown
 ): void => {
+  const isClientError = error instanceof ClientException;
+  const resolvedStatusCode = isClientError ? error.statusCode : statusCode;
   const message =
     typeof error === 'string'
       ? error
@@ -68,16 +72,21 @@ export const sendError = (
 
   const body: ResponseBody<null> = {
     success: false,
-    statusCode,
+    statusCode: resolvedStatusCode,
     message,
     data: null,
     error: message,
     timestamp: new Date().toISOString()
   };
 
-  if (details !== undefined) {
-    body.errors = details;
+  if (isClientError) {
+    body.code = error.code;
   }
 
-  res.status(statusCode).json(body);
+  const errorDetails = isClientError ? error.details : details;
+  if (errorDetails !== undefined) {
+    body.errors = errorDetails;
+  }
+
+  res.status(resolvedStatusCode).json(body);
 };

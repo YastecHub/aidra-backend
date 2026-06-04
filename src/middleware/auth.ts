@@ -2,12 +2,13 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../types';
 import { verifyAccessToken } from '../utils/jwt';
 import { sendError } from '../utils/apiResponse';
+import { ApiErrorCode, UnauthorizedClientException } from '../utils/clientError';
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-      sendError(res, 'No token provided', 401);
+      sendError(res, new UnauthorizedClientException('No token provided', ApiErrorCode.TOKEN_REQUIRED));
       return;
     }
 
@@ -15,6 +16,6 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     req.user = decoded;
     next();
   } catch (error) {
-    sendError(res, 'Invalid or expired token', 401);
+    sendError(res, new UnauthorizedClientException('Invalid or expired token', ApiErrorCode.INVALID_TOKEN));
   }
 };

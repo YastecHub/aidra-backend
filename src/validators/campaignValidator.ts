@@ -31,20 +31,20 @@ const imageValidator = (value: unknown, { req }: any): boolean => {
 };
 
 export const createCampaignValidator = [
-  body('title').trim().notEmpty().withMessage('Title is required'),
-  body('description').trim().notEmpty().withMessage('Description is required'),
-  body('goalAmount').isFloat({ min: 1 }).withMessage('Goal amount must be greater than 0'),
+  body('title').trim().isLength({ min: 1, max: 120 }).withMessage('Title must be between 1 and 120 characters'),
+  body('description').trim().isLength({ min: 1, max: 5000 }).withMessage('Description must be between 1 and 5000 characters'),
+  body('goalAmount').isFloat({ min: 1, max: 100000000 }).withMessage('Goal amount must be between 1 and 100,000,000'),
   body('image').custom(imageValidator),
-  body('category').optional().trim(),
+  body('category').optional().trim().isLength({ max: 80 }).withMessage('Category must be 80 characters or fewer'),
   body('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
-  body('walletAddress').optional().trim().notEmpty().withMessage('Wallet address cannot be empty')
+  body('walletAddress').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Wallet address must be between 1 and 200 characters')
 ];
 
 export const updateCampaignValidator = [
   param('id').isMongoId().withMessage('Invalid campaign ID'),
-  body('title').optional().trim().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().trim().notEmpty().withMessage('Description cannot be empty'),
-  body('goalAmount').optional().isFloat({ min: 1 }).withMessage('Goal amount must be greater than 0'),
+  body('title').optional().trim().isLength({ min: 1, max: 120 }).withMessage('Title must be between 1 and 120 characters'),
+  body('description').optional().trim().isLength({ min: 1, max: 5000 }).withMessage('Description must be between 1 and 5000 characters'),
+  body('goalAmount').optional().isFloat({ min: 1, max: 100000000 }).withMessage('Goal amount must be between 1 and 100,000,000'),
   body('image').optional().custom((value, { req }) => {
     if (req.file) {
       return true;
@@ -64,7 +64,9 @@ export const updateCampaignValidator = [
 
     throw new Error('Image must be a valid URL or base64 image string');
   }),
-  body('walletAddress').optional().trim().notEmpty().withMessage('Wallet address cannot be empty')
+  body('category').optional().trim().isLength({ max: 80 }).withMessage('Category must be 80 characters or fewer'),
+  body('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
+  body('walletAddress').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Wallet address must be between 1 and 200 characters')
 ];
 
 export const campaignIdValidator = [

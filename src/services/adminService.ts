@@ -3,12 +3,18 @@ import User from '../models/User';
 import Campaign from '../models/Campaign';
 import Donation from '../models/Donation';
 import logger from '../config/logger';
+import {
+  ApiErrorCode,
+  ClientException,
+  ConflictClientException,
+  NotFoundClientException
+} from '../utils/clientError';
 
 // ── Admin Registration ──
 
 export const registerAdmin = async (email: string, password: string, fullName: string) => {
-  const existing = await User.findOne({ email });
-  if (existing) throw new Error('Email already registered');
+  const existing = await User.findOne({ email }).select('_id').lean();
+  if (existing) throw new ConflictClientException('Email already registered', ApiErrorCode.DUPLICATE_EMAIL);
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const admin = await User.create({
@@ -31,13 +37,15 @@ export const registerAdmin = async (email: string, password: string, fullName: s
 // ── KYC Management ──
 
 export const getPendingKYC = async () => {
-  return await User.find({ kycStatus: 'pending' }).select('fullName email kycStatus kycDocuments createdAt');
+  return await User.find({ kycStatus: 'pending' })
+    .select('fullName email kycStatus kycDocuments createdAt')
+    .lean();
 };
 
 export const approveKYC = async (userId: string) => {
   const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
-  if (user.kycStatus !== 'pending') throw new Error('KYC is not pending');
+  if (!user) throw new NotFoundClientException('User not found', ApiErrorCode.USER_NOT_FOUND);
+  if (user.kycStatus !== 'pending') throw new ClientException('KYC is not pending', ApiErrorCode.KYC_NOT_PENDING);
 
   user.kycStatus = 'approved';
   user.isKYCCompleted = true;
@@ -49,8 +57,8 @@ export const approveKYC = async (userId: string) => {
 
 export const rejectKYC = async (userId: string, reason: string) => {
   const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
-  if (user.kycStatus !== 'pending') throw new Error('KYC is not pending');
+  if (!user) throw new NotFoundClientException('User not found', ApiErrorCode.USER_NOT_FOUND);
+  if (user.kycStatus !== 'pending') throw new ClientException('KYC is not pending', ApiErrorCode.KYC_NOT_PENDING);
 
   user.kycStatus = 'rejected';
   user.isKYCCompleted = false;
@@ -64,13 +72,17 @@ export const rejectKYC = async (userId: string, reason: string) => {
 
 export const getAllCampaignsAdmin = async (status?: string) => {
   const query = status ? { status } : {};
-  return await Campaign.find(query).populate('owner', 'fullName email').sort('-createdAt');
+  return await Campaign.find(query)
+    .select('title description goalAmount raisedAmount image owner status category endDate walletAddress createdAt updatedAt')
+    .populate('owner', 'fullName email')
+    .sort('-createdAt')
+    .lean();
 };
 
 export const approveCampaign = async (campaignId: string) => {
   const campaign = await Campaign.findById(campaignId);
-  if (!campaign) throw new Error('Campaign not found');
-  if (campaign.status === 'active') throw new Error('Campaign is already active');
+  if (!campaign) throw new NotFoundClientException('Campaign not found', ApiErrorCode.CAMPAIGN_NOT_FOUND);
+  if (campaign.status === 'active') throw new ConflictClientException('Campaign is already active', ApiErrorCode.CAMPAIGN_ALREADY_ACTIVE);
 
   campaign.status = 'active';
   await campaign.save();
@@ -81,7 +93,7 @@ export const approveCampaign = async (campaignId: string) => {
 
 export const rejectCampaign = async (campaignId: string, reason: string) => {
   const campaign = await Campaign.findById(campaignId);
-  if (!campaign) throw new Error('Campaign not found');
+  if (!campaign) throw new NotFoundClientException('Campaign not found', ApiErrorCode.CAMPAIGN_NOT_FOUND);
 
   campaign.status = 'rejected';
   await campaign.save();
@@ -93,38 +105,57 @@ export const rejectCampaign = async (campaignId: string, reason: string) => {
 // ── User Management ──
 
 export const getAllUsers = async () => {
-  return await User.find().select('fullName email role isVerified isKYCCompleted kycStatus createdAt').sort('-createdAt');
+  return await User.find()
+    .select('fullName email role isVerified isKYCCompleted kycStatus createdAt')
+    .sort('-createdAt')
+    .lean();
 };
 
 export const getUserById = async (userId: string) => {
-  const user = await User.findById(userId).select('fullName email role isVerified isKYCCompleted kycStatus kycDocuments createdAt');
-  if (!user) throw new Error('User not found');
+  const user = await User.findById(userId)
+    .select('fullName email role isVerified isKYCCompleted kycStatus kycDocuments createdAt')
+    .lean();
+  if (!user) throw new NotFoundClientException('User not found', ApiErrorCode.USER_NOT_FOUND);
   return user;
 };
 
 // ── Platform Analytics ──
 
 export const getPlatformStats = async () => {
-  const totalUsers = await User.countDocuments();
-  const verifiedUsers = await User.countDocuments({ isVerified: true });
-  const pendingKYC = await User.countDocuments({ kycStatus: 'pending' });
+  const [
+    totalUsers,
+    verifiedUsers,
+    pendingKYC,
+    totalCampaigns,
+    activeCampaigns,
+    draftCampaigns,
+    underReviewCampaigns,
+    totalDonations,
+    pendingDonations,
+    donationTotals
+  ] = await Promise.all([
+    User.countDocuments(),
+    User.countDocuments({ isVerified: true }),
+    User.countDocuments({ kycStatus: 'pending' }),
+    Campaign.countDocuments(),
+    Campaign.countDocuments({ status: 'active' }),
+    Campaign.countDocuments({ status: 'draft' }),
+    Campaign.countDocuments({ status: 'underReview' }),
+    Donation.countDocuments({ status: 'completed' }),
+    Donation.countDocuments({ status: 'pending' }),
+    Donation.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, totalRaised: { $sum: '$amount' }, totalFees: { $sum: '$platformFee' } } },
+      { $project: { _id: 0, totalRaised: 1, totalFees: 1 } }
+    ])
+  ]);
 
-  const totalCampaigns = await Campaign.countDocuments();
-  const activeCampaigns = await Campaign.countDocuments({ status: 'active' });
-  const draftCampaigns = await Campaign.countDocuments({ status: 'draft' });
-  const underReviewCampaigns = await Campaign.countDocuments({ status: 'underReview' });
-
-  const totalDonations = await Donation.countDocuments({ status: 'completed' });
-  const pendingDonations = await Donation.countDocuments({ status: 'pending' });
-
-  const completedDonations = await Donation.find({ status: 'completed' });
-  const totalRaised = completedDonations.reduce((sum, d) => sum + d.amount, 0);
-  const totalFees = completedDonations.reduce((sum, d) => sum + (d.platformFee || 0), 0);
+  const totals = donationTotals[0] ?? { totalRaised: 0, totalFees: 0 };
 
   return {
     users: { totalUsers, verifiedUsers, pendingKYC },
     campaigns: { totalCampaigns, activeCampaigns, draftCampaigns, underReviewCampaigns },
-    donations: { totalDonations, pendingDonations, totalRaised, totalFees }
+    donations: { totalDonations, pendingDonations, totalRaised: totals.totalRaised, totalFees: totals.totalFees }
   };
 };
 
@@ -133,6 +164,8 @@ export const getPlatformStats = async () => {
 export const getAllDonations = async (status?: string) => {
   const query = status ? { status } : {};
   return await Donation.find(query)
+    .select('campaign amount cryptoAmount cryptoCurrency donorEmail paymentStatus status platformFee netAmount createdAt updatedAt')
     .populate('campaign', 'title')
-    .sort('-createdAt');
+    .sort('-createdAt')
+    .lean();
 };

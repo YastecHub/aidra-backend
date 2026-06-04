@@ -5,14 +5,21 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { generateOTP } from '../utils/otp';
 import { sendOTPEmail } from '../utils/email';
 import logger from '../config/logger';
+import {
+  ApiErrorCode,
+  ConflictClientException,
+  NotFoundClientException,
+  UnauthorizedClientException,
+  ValidationClientException
+} from '../utils/clientError';
 
 export const register = async (email: string, password: string, fullName: string, role: string = 'campaignOwner') => {
   logger.info(`Registration attempt for email: ${email}`);
   
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email }).select('_id').lean();
   if (existingUser) {
     logger.warn(`Registration failed: Email already exists - ${email}`);
-    throw new Error('Email already registered');
+    throw new ConflictClientException('Email already registered', ApiErrorCode.DUPLICATE_EMAIL);
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,7 +37,7 @@ export const register = async (email: string, password: string, fullName: string
     await User.findByIdAndDelete(user._id);
     await OTP.deleteMany({ userId: user._id });
     logger.error(`Registration failed - email not sent to ${email}:`, error);
-    throw new Error('Failed to send verification email. Please try again later.');
+    throw new ValidationClientException('Failed to send verification email. Please try again later.');
   }
 
   return { message: 'Registration successful. Check your email inbox or spam for OTP.' };
@@ -42,11 +49,11 @@ export const verifyEmail = async (email: string, otp: string) => {
   const otpRecord = await OTP.findOne({ email, otp, type: 'emailVerification' });
   if (!otpRecord) {
     logger.warn(`Invalid OTP attempt for: ${email}`);
-    throw new Error('Invalid OTP');
+    throw new ValidationClientException('Invalid OTP');
   }
   if (otpRecord.expiresAt < new Date()) {
     logger.warn(`Expired OTP attempt for: ${email}`);
-    throw new Error('OTP expired');
+    throw new ValidationClientException('OTP expired');
   }
 
   await User.findByIdAndUpdate(otpRecord.userId, { isVerified: true });
@@ -59,14 +66,14 @@ export const verifyEmail = async (email: string, otp: string) => {
 export const login = async (email: string, password: string) => {
   logger.info(`Login attempt for: ${email}`);
   
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password email role isVerified isKYCCompleted fullName profileImage');
   if (!user || !(await bcrypt.compare(password, user.password))) {
     logger.warn(`Failed login attempt for: ${email}`);
-    throw new Error('Invalid credentials');
+    throw new UnauthorizedClientException('Invalid credentials', ApiErrorCode.INVALID_CREDENTIALS);
   }
   if (!user.isVerified) {
     logger.warn(`Unverified user login attempt: ${email}`);
-    throw new Error('Email not verified');
+    throw new UnauthorizedClientException('Email not verified', ApiErrorCode.EMAIL_NOT_VERIFIED);
   }
 
   const payload = { 
@@ -98,10 +105,10 @@ export const login = async (email: string, password: string) => {
 export const forgotPassword = async (email: string) => {
   logger.info(`Password reset requested for: ${email}`);
   
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select('_id email').lean();
   if (!user) {
     logger.warn(`Password reset failed: User not found - ${email}`);
-    throw new Error('User not found');
+    throw new NotFoundClientException('User not found', ApiErrorCode.USER_NOT_FOUND);
   }
 
   const otp = generateOTP();
@@ -114,7 +121,7 @@ export const forgotPassword = async (email: string) => {
   } catch (error) {
     await OTP.deleteOne({ userId: user._id, type: 'passwordReset' });
     logger.error(`Failed to send password reset OTP to ${email}:`, error);
-    throw new Error('Failed to send password reset email. Please try again later.');
+    throw new ValidationClientException('Failed to send password reset email. Please try again later.');
   }
 
   return { message: 'OTP sent to your email' };
@@ -122,8 +129,8 @@ export const forgotPassword = async (email: string) => {
 
 export const resetPassword = async (email: string, otp: string, newPassword: string) => {
   const otpRecord = await OTP.findOne({ email, otp, type: 'passwordReset' });
-  if (!otpRecord) throw new Error('Invalid OTP');
-  if (otpRecord.expiresAt < new Date()) throw new Error('OTP expired');
+  if (!otpRecord) throw new ValidationClientException('Invalid OTP');
+  if (otpRecord.expiresAt < new Date()) throw new ValidationClientException('OTP expired');
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   await User.findByIdAndUpdate(otpRecord.userId, { password: hashedPassword, refreshToken: null });
@@ -133,8 +140,8 @@ export const resetPassword = async (email: string, otp: string, newPassword: str
 };
 
 export const resendOTP = async (email: string, type: string) => {
-  const user = await User.findOne({ email });
-  if (!user) throw new Error('User not found');
+  const user = await User.findOne({ email }).select('_id email').lean();
+  if (!user) throw new NotFoundClientException('User not found', ApiErrorCode.USER_NOT_FOUND);
 
   await OTP.deleteMany({ email, type });
 
@@ -148,7 +155,7 @@ export const resendOTP = async (email: string, type: string) => {
   } catch (error) {
     await OTP.deleteOne({ userId: user._id, type });
     logger.error(`Failed to resend OTP to ${email}:`, error);
-    throw new Error('Failed to resend OTP email. Please try again later.');
+    throw new ValidationClientException('Failed to resend OTP email. Please try again later.');
   }
 
   return { message: 'OTP resent successfully' };
