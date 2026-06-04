@@ -2,22 +2,23 @@ import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as userService from '../services/userService';
 import { uploadBase64KYCToCloudinary, uploadKYCFilesToCloudinary } from '../middleware/upload';
+import { sendError, sendSuccess } from '../utils/apiResponse';
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await userService.getProfile(req.user!.userId);
-    res.json(user);
+    sendSuccess(res, user, 200, 'Profile retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await userService.updateProfile(req.user!.userId, req.body);
-    res.json(user);
+    sendSuccess(res, user, 200, 'Profile updated successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -25,9 +26,9 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
   try {
     const { oldPassword, newPassword } = req.body;
     const result = await userService.changePassword(req.user!.userId, oldPassword, newPassword);
-    res.json(result);
+    sendSuccess(res, result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -45,22 +46,22 @@ export const submitKYC = async (req: AuthRequest, res: Response): Promise<void> 
     } else if (Array.isArray(req.body?.documents) && req.body.documents.length > 0) {
       documentPaths = await uploadBase64KYCToCloudinary(req.body.documents);
     } else {
-      res.status(400).json({ error: 'At least one document is required' });
+      sendError(res, 'At least one document is required');
       return;
     }
 
     const result = await userService.submitKYC(req.user!.userId, documentPaths);
-    res.json(result);
+    sendSuccess(res, result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const getKYCStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const status = await userService.getKYCStatus(req.user!.userId);
-    res.json(status);
+    sendSuccess(res, status, 200, 'KYC status retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };

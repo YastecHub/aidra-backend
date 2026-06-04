@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../types';
 import * as adminService from '../services/adminService';
+import { sendError, sendSuccess } from '../utils/apiResponse';
 
 // ── Admin Registration (secret-protected) ──
 
@@ -10,19 +11,19 @@ export const registerAdmin = async (req: Request, res: Response): Promise<void> 
     const expectedSecret = process.env.ADMIN_BOOTSTRAP_SECRET;
 
     if (!expectedSecret) {
-      res.status(500).json({ error: 'Admin registration is disabled (secret not configured)' });
+      sendError(res, 'Admin registration is disabled (secret not configured)', 500);
       return;
     }
     if (providedSecret !== expectedSecret) {
-      res.status(403).json({ error: 'Invalid admin secret' });
+      sendError(res, 'Invalid admin secret', 403);
       return;
     }
 
     const { email, password, fullName } = req.body;
     const result = await adminService.registerAdmin(email, password, fullName);
-    res.status(201).json(result);
+    sendSuccess(res, result, 201);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -31,27 +32,27 @@ export const registerAdmin = async (req: Request, res: Response): Promise<void> 
 export const getPendingKYC = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await adminService.getPendingKYC();
-    res.json(users);
+    sendSuccess(res, users, 200, 'Pending KYC users retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const approveKYC = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const result = await adminService.approveKYC(req.params.userId);
-    res.json(result);
+    sendSuccess(res, result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const rejectKYC = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const result = await adminService.rejectKYC(req.params.userId, req.body.reason);
-    res.json(result);
+    sendSuccess(res, result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -60,27 +61,27 @@ export const rejectKYC = async (req: AuthRequest, res: Response): Promise<void> 
 export const getAllCampaigns = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const campaigns = await adminService.getAllCampaignsAdmin(req.query.status as string);
-    res.json(campaigns);
+    sendSuccess(res, campaigns, 200, 'Campaigns retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const approveCampaign = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const result = await adminService.approveCampaign(req.params.campaignId);
-    res.json(result);
+    sendSuccess(res, result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const rejectCampaign = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const result = await adminService.rejectCampaign(req.params.campaignId, req.body.reason);
-    res.json(result);
+    sendSuccess(res, result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -89,18 +90,18 @@ export const rejectCampaign = async (req: AuthRequest, res: Response): Promise<v
 export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await adminService.getAllUsers();
-    res.json(users);
+    sendSuccess(res, users, 200, 'Users retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await adminService.getUserById(req.params.userId);
-    res.json(user);
+    sendSuccess(res, user, 200, 'User retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -109,9 +110,9 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
 export const getPlatformStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const stats = await adminService.getPlatformStats();
-    res.json(stats);
+    sendSuccess(res, stats, 200, 'Platform stats retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
@@ -120,8 +121,8 @@ export const getPlatformStats = async (req: AuthRequest, res: Response): Promise
 export const getAllDonations = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const donations = await adminService.getAllDonations(req.query.status as string);
-    res.json(donations);
+    sendSuccess(res, donations, 200, 'Donations retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };

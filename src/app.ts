@@ -9,6 +9,7 @@ import donationRoutes from './routes/donationRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import adminRoutes from './routes/adminRoutes';
+import { sendError, sendSuccess } from './utils/apiResponse';
 
 const app = express();
 
@@ -26,10 +27,10 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.get('/health', (req, res) => res.json({ status: 'OK' }));
+app.get('/health', (req, res) => sendSuccess(res, { status: 'OK' }, 200, 'Service is healthy'));
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  res.status(400).json({ error: err?.message || 'Bad request' });
+  sendError(res, err?.message || 'Bad request');
 };
 app.use(errorHandler);
 

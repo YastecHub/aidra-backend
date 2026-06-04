@@ -2,39 +2,40 @@ import { Request, Response } from 'express';
 import * as donationService from '../services/donationService';
 import * as nowPaymentsService from '../services/nowPaymentsService';
 import logger from '../config/logger';
+import { sendError, sendSuccess } from '../utils/apiResponse';
 
 export const handleIPN = async (req: Request, res: Response): Promise<void> => {
   try {
     const signature = req.headers['x-nowpayments-sig'] as string;
     if (!signature || !nowPaymentsService.verifyIPNSignature(req.body, signature)) {
       logger.warn('IPN signature verification failed');
-      res.status(403).json({ error: 'Invalid signature' });
+      sendError(res, 'Invalid signature', 403);
       return;
     }
 
     await donationService.processIPN(req.body);
-    res.status(200).json({ status: 'ok' });
+    sendSuccess(res, { status: 'ok' }, 200, 'IPN processed successfully');
   } catch (error) {
     logger.error('IPN processing error:', error);
-    res.status(500).json({ error: 'IPN processing failed' });
+    sendError(res, 'IPN processing failed', 500);
   }
 };
 
 export const getPaymentStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await donationService.getPaymentStatus(req.params.donationId);
-    res.json(result);
+    sendSuccess(res, result, 200, 'Payment status retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const getAvailableCurrencies = async (_req: Request, res: Response): Promise<void> => {
   try {
     const currencies = await nowPaymentsService.getAvailableCurrencies();
-    res.json({ currencies });
+    sendSuccess(res, { currencies }, 200, 'Available currencies retrieved successfully');
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    sendError(res, error, 500);
   }
 };
 
@@ -46,8 +47,8 @@ export const getEstimatedPrice = async (req: Request, res: Response): Promise<vo
       currencyFrom as string,
       currencyTo as string
     );
-    res.json(estimate);
+    sendSuccess(res, estimate, 200, 'Estimated price retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };

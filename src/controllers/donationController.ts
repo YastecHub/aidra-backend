@@ -1,30 +1,31 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../types';
 import * as donationService from '../services/donationService';
+import { sendError, sendSuccess } from '../utils/apiResponse';
 
 export const createDonation = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await donationService.createDonation(req.body);
-    res.status(201).json(result);
+    sendSuccess(res, result, 201, 'Donation payment created successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const createDonationCheckout = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await donationService.createDonationCheckout(req.body);
-    res.status(201).json(result);
+    sendSuccess(res, result, 201, 'Donation checkout created successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
 
 export const getCampaignDonations = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const donations = await donationService.getCampaignDonations(req.params.id, req.user!.userId);
-    res.json(donations);
+    sendSuccess(res, donations, 200, 'Donations retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };

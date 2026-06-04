@@ -1,12 +1,13 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as dashboardService from '../services/dashboardService';
+import { sendError, sendSuccess } from '../utils/apiResponse';
 
 export const getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const data = await dashboardService.getDashboardStats(req.user!.userId);
-    res.json(data);
+    sendSuccess(res, data, 200, 'Dashboard data retrieved successfully');
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    sendError(res, error);
   }
 };
