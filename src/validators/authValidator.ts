@@ -1,8 +1,10 @@
 import { body } from 'express-validator';
+import { optionalPasswordConfirmationValidator, strongPasswordValidator } from './passwordValidator';
 
 export const registerValidator = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
-  body('password').isLength({ min: 6, max: 128 }).withMessage('Password must be between 6 and 128 characters'),
+  strongPasswordValidator('password'),
+  optionalPasswordConfirmationValidator('password'),
   body('fullName').trim().isLength({ min: 1, max: 120 }).withMessage('Full name must be between 1 and 120 characters'),
   body('role').optional().isIn(['campaignOwner']).withMessage('Invalid role')
 ];
@@ -24,7 +26,8 @@ export const forgotPasswordValidator = [
 export const resetPasswordValidator = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
-  body('newPassword').isLength({ min: 6, max: 128 }).withMessage('Password must be between 6 and 128 characters')
+  strongPasswordValidator('newPassword'),
+  optionalPasswordConfirmationValidator('newPassword')
 ];
 
 export const resendOTPValidator = [

@@ -38,6 +38,9 @@ const router = Router();
  *               password:
  *                 type: string
  *                 minLength: 8
+ *                 maxLength: 128
+ *                 pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,128}$'
+ *                 description: Must contain uppercase, lowercase, number, and one of !@#$%^&*
  *               fullName:
  *                 type: string
  *     responses:

@@ -1,8 +1,9 @@
 import { param, body, query } from 'express-validator';
+import { strongPasswordValidator } from './passwordValidator';
 
 export const registerAdminValidator = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
-  body('password').isLength({ min: 8, max: 128 }).withMessage('Admin password must be between 8 and 128 characters'),
+  strongPasswordValidator('password'),
   body('fullName').trim().isLength({ min: 1, max: 120 }).withMessage('Full name must be between 1 and 120 characters')
 ];
 

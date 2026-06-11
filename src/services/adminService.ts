@@ -9,10 +9,12 @@ import {
   ConflictClientException,
   NotFoundClientException
 } from '../utils/clientError';
+import { assertStrongPassword } from '../utils/passwordPolicy';
 
 // ── Admin Registration ──
 
 export const registerAdmin = async (email: string, password: string, fullName: string) => {
+  assertStrongPassword(password);
   const existing = await User.findOne({ email }).select('_id').lean();
   if (existing) throw new ConflictClientException('Email already registered', ApiErrorCode.DUPLICATE_EMAIL);
 

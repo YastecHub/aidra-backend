@@ -71,7 +71,13 @@ router.patch('/me', authenticate, userValidator.updateProfileValidator, validate
  *                 type: string
  *               newPassword:
  *                 type: string
- *                 minLength: 6
+ *                 minLength: 8
+ *                 maxLength: 128
+ *                 pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,128}$'
+ *                 description: Must contain uppercase, lowercase, number, and one of !@#$%^&*
+ *               confirmPassword:
+ *                 type: string
+ *                 description: Optional confirmation that must match newPassword when provided
  *     responses:
  *       200:
  *         description: Password changed successfully

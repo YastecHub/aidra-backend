@@ -82,7 +82,7 @@ Interactive documentation with:
 
 ### Campaigns
 - `POST /api/campaigns` - Create campaign (Protected, KYC required)
-- `GET /api/campaigns` - Get all campaigns
+- `GET /api/campaigns` - Get all approved, active campaigns
 - `GET /api/campaigns/:id` - Get campaign by ID
 - `GET /api/campaigns/my-campaigns` - Get user's campaigns (Protected)
 - `PATCH /api/campaigns/:id` - Update campaign (Protected)

@@ -2,7 +2,11 @@ import Campaign from '../models/Campaign';
 import { ApiErrorCode, ForbiddenClientException, NotFoundClientException } from '../utils/clientError';
 
 export const createCampaign = async (userId: string, data: any) => {
-  const campaign = await Campaign.create({ ...getCampaignPayload(data), owner: userId });
+  const campaign = await Campaign.create({
+    ...getCampaignPayload(data),
+    owner: userId,
+    status: 'underReview'
+  });
   return campaign;
 };
 

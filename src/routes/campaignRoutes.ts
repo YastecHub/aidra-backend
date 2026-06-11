@@ -58,7 +58,7 @@ router.post('/', authenticate, requireKYC, uploadCampaignImage.single('image'), 
  * @swagger
  * /api/campaigns:
  *   get:
- *     summary: Get all campaigns
+ *     summary: Get all active campaigns
  *     tags: [Campaigns]
  *     parameters:
  *       - in: query
@@ -72,7 +72,7 @@ router.post('/', authenticate, requireKYC, uploadCampaignImage.single('image'), 
  *           enum: [createdAt, -createdAt, title, -title]
  *     responses:
  *       200:
- *         description: List of campaigns
+ *         description: List of approved, active campaigns
  */
 router.get('/', campaignValidator.getCampaignsValidator, validate, campaignController.getAllCampaigns);
 

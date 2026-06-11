@@ -12,8 +12,10 @@ import {
   UnauthorizedClientException,
   ValidationClientException
 } from '../utils/clientError';
+import { assertStrongPassword } from '../utils/passwordPolicy';
 
 export const register = async (email: string, password: string, fullName: string, role: string = 'campaignOwner') => {
+  assertStrongPassword(password);
   logger.info(`Registration attempt for email: ${email}`);
   
   const existingUser = await User.findOne({ email }).select('_id').lean();
@@ -128,6 +130,7 @@ export const forgotPassword = async (email: string) => {
 };
 
 export const resetPassword = async (email: string, otp: string, newPassword: string) => {
+  assertStrongPassword(newPassword);
   const otpRecord = await OTP.findOne({ email, otp, type: 'passwordReset' });
   if (!otpRecord) throw new ValidationClientException('Invalid OTP');
   if (otpRecord.expiresAt < new Date()) throw new ValidationClientException('OTP expired');

@@ -36,7 +36,8 @@ describe('Auth API', () => {
         .post('/api/auth/register')
         .send({
           email: 'test@example.com',
-          password: 'password123',
+          password: 'Password123!',
+          confirmPassword: 'Password123!',
           fullName: 'Test User'
         });
 
@@ -67,13 +68,42 @@ describe('Auth API', () => {
         .post('/api/auth/register')
         .send({
           email: 'test@example.com',
-          password: 'password123',
+          password: 'Password123!',
           fullName: 'Test User'
         });
 
       expect(res.status).toBe(409);
       expect(res.body.error).toContain('already registered');
       expect(res.body.code).toBe('DUPLICATE_EMAIL');
+    });
+
+    it('should reject a weak password', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com',
+          password: 'password123',
+          fullName: 'Test User'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body.errors[0].msg).toContain('uppercase letter');
+      expect(res.body.errors[0].msg).toContain('special character');
+    });
+
+    it('should reject mismatched password confirmation', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com',
+          password: 'Password123!',
+          confirmPassword: 'Password456!',
+          fullName: 'Test User'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.errors[0].msg).toBe('Passwords do not match');
     });
   });
 

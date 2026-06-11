@@ -25,7 +25,7 @@ export const createCampaign = async (req: AuthRequest, res: Response): Promise<v
     }
 
     const campaign = await campaignService.createCampaign(req.user!.userId, requestBody);
-    sendSuccess(res, campaign, 201, 'Campaign created successfully');
+    sendSuccess(res, campaign, 201, 'Campaign created and submitted for review');
   } catch (error) {
     sendError(res, error);
   }
@@ -36,7 +36,7 @@ export const getAllCampaigns = async (req: AuthRequest, res: Response): Promise<
     const { category, sort } = req.query;
     const filters = category ? { category } : {};
     const campaigns = await campaignService.getAllCampaigns(filters, sort as string);
-    sendSuccess(res, campaigns, 200, 'Campaigns retrieved successfully');
+    sendSuccess(res, campaigns, 200, 'Active campaigns retrieved successfully');
   } catch (error) {
     sendError(res, error);
   }

@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import { optionalPasswordConfirmationValidator, strongPasswordValidator } from './passwordValidator';
 
 export const updateProfileValidator = [
   body('fullName').optional().trim().isLength({ min: 1, max: 120 }).withMessage('Full name must be between 1 and 120 characters'),
@@ -7,7 +8,8 @@ export const updateProfileValidator = [
 
 export const changePasswordValidator = [
   body('oldPassword').notEmpty().withMessage('Old password is required'),
-  body('newPassword').isLength({ min: 6, max: 128 }).withMessage('New password must be between 6 and 128 characters')
+  strongPasswordValidator('newPassword'),
+  optionalPasswordConfirmationValidator('newPassword')
 ];
 
 export const submitKYCValidator = [

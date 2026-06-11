@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/User';
 import { ApiErrorCode, NotFoundClientException, ValidationClientException } from '../utils/clientError';
+import { assertStrongPassword } from '../utils/passwordPolicy';
 
 export const getProfile = async (userId: string) => {
   const user = await User.findById(userId)
@@ -25,6 +26,7 @@ export const updateProfile = async (userId: string, updates: any) => {
 };
 
 export const changePassword = async (userId: string, oldPassword: string, newPassword: string) => {
+  assertStrongPassword(newPassword);
   const user = await User.findById(userId).select('+password');
   if (!user) throw new NotFoundClientException('User not found', ApiErrorCode.USER_NOT_FOUND);
   if (!(await bcrypt.compare(oldPassword, user.password))) {
